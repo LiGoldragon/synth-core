@@ -1,63 +1,67 @@
-;; dialect.aski — synth grammar domains
+;; dialect.aski — the rkyv contract between askicc and askic.
 ;;
-;; The structured representation of parsed .synth files.
-;; askicc reads .synth text and produces these domains.
-;; askic uses them at runtime to drive parsing.
+;; Every type here appears in the rkyv message that askicc
+;; produces and askic deserializes. No strings — every piece
+;; of synth data is a typed domain variant.
+;;
+;; Leaf types first, composite types last (Rust declaration order).
 
-(Dialect Dialect Rule Alternative Item Delimited Cardinality Casing DelimKind)
-
-
-;; ── Dialect ─────────────────────────────────────────────────────
-
-{Dialect
-  (Name String)
-  (Rules [Vec Rule])}
+(Dialect
+  DialectTree Dialect Rule Alternative Item ItemContent
+  Cardinality DelimKind DialectKind DeclareLabel LiteralToken)
 
 
-;; ── Rule ────────────────────────────────────────────────────────
+;; ── Leaf Enums (no data, Copy) ──────────────────────────────
 
-(Rule
-  {Sequential (Items [Vec Item])}
-  {OrderedChoice (Alternatives [Vec Alternative])})
+(Cardinality One ZeroOrMore OneOrMore Optional)
+
+(DelimKind Paren Bracket Brace ParenPipe BracketPipe BracePipe)
+
+(DialectKind
+  Root Module Enum Struct Body
+  Expr ExprOr ExprAnd ExprCompare ExprAdd ExprMul ExprPostfix ExprAtom
+  Type TypeApplication GenericParam
+  Statement Instance Mutation
+  Param Signature Method
+  TraitDecl TraitImpl TypeImpl
+  Match Pattern Loop Process
+  StructConstruct Ffi)
+
+(DeclareLabel
+  Module Enum Struct Type Newtype Constructor Variant Field
+  Literal Self Name Binding Param Bound Export Import Const
+  Trait Method ForeignFunction Signature)
+
+(LiteralToken
+  At MutAt BorrowAt Dollar
+  Star Plus Question Ampersand
+  Caret Dot Slash
+  LogicalOr LogicalAnd
+  Eq NotEq Lt Gt LtEq GtEq
+  Minus Percent
+  InlineOr Colon Pipe)
+
+
+;; ── Composite Types ─────────────────────────────────────────
+
+{Item (Content ItemContent) (Adjacent Bool)}
+
+(ItemContent
+  {Declare (Label DeclareLabel)}
+  {DialectRef (Target DialectKind)}
+  {Delimited (Kind DelimKind) (Inner [Vec Item])}
+  {Literal (Token LiteralToken)}
+  {Repeat (Kind Cardinality) (Inner [Box Item])}
+  LiteralValue)
 
 {Alternative
   (Items [Vec Item])
   (Cardinality Cardinality)}
 
+(Rule
+  {Sequential (Items [Vec Item])}
+  {OrderedChoice (Alternatives [Vec Alternative])})
 
-;; ── Item ────────────────────────────────────────────────────────
-;; Space between items in the synth file = space allowed in source.
-;; Adjacent items (no space) = must be adjacent in source.
-;; The Adjacent flag on each item captures this.
+{Dialect (Kind DialectKind) (Rules [Vec Rule])}
 
-{Item
-  (Content ItemContent)
-  (Adjacent Bool)}
-
-(ItemContent
-  ;; @Name or @name — declare a name at this position
-  {Declare (Casing Casing) (Label String)}
-
-  ;; <Dialect> — push into another dialect
-  {DialectRef (Name String)}
-
-  ;; (content) [content] {content} (|content|) etc — delimited group
-  {Delimited (Kind DelimKind) (Inner [Vec Item])}
-
-  ;; _@_ _~@_ _$_ etc — literal token to match
-  {Literal (Token String)}
-
-  ;; +item *item ?item — cardinality wrapper
-  {Repeat (Kind Cardinality) (Inner [Box Item])}
-
-  ;; @Literal — match a literal value token
-  LiteralValue)
-
-
-;; ── Supporting types ────────────────────────────────────────────
-
-(Cardinality One ZeroOrMore OneOrMore Optional)
-
-(Casing Pascal Camel)
-
-(DelimKind Paren Bracket Brace ParenPipe BracketPipe BracePipe)
+{DialectTree (Dialects [Vec Dialect])}
