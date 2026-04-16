@@ -6,7 +6,7 @@
 ;; DialectKind, Rule, and grammar structures belong in askicc
 ;; (compiler infrastructure), not in aski-core (language anatomy).
 
-(tree DataTree)
+(Tree DataTree)
 
 {DataTree
   (Root Node)

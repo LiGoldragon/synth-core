@@ -7,7 +7,7 @@
 ;; walks up from the current scope toward root. Same name in
 ;; different scopes = different things, no collision.
 
-(scope ScopeKind Scope Declaration Visibility)
+(Scope ScopeKind Scope Declaration Visibility)
 
 ;; ── Scope Kind ──────────────────────────────────────────────────
 ;; What syntactic construct created this scope.

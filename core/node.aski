@@ -6,7 +6,7 @@
 ;; "Domain" is the overarching concept — any data definition.
 ;; Enum, Struct, and Newtype are the three forms of domain.
 
-(node NodeKind Node NodeValue NameRef Span)
+(Node NodeKind Node NodeValue NameRef Span)
 
 ;; ── Node Kind ───────────────────────────────────────────────────
 ;; One variant per syntactic construct. Derived from the synth
@@ -60,9 +60,12 @@
   FieldAccess MethodCall TryUnwrap
 
   ;; expression atoms (ExprAtom.synth)
-  InstanceRef QualifiedVariant BareName
+  InstanceRef QualifiedVariant PathVariant PathMethod BareName
   IntLit FloatLit StringLit
-  Group InlineEval MatchExpr LoopExpr StructConstruct
+  InlineEval MatchExpr LoopExpr IterationExpr StructConstruct
+
+  ;; statement-level (Statement.synth)
+  LocalTypeDecl
 
   ;; meta
   ReturnType TypeRef Export Import MatchTarget PatternBind)
