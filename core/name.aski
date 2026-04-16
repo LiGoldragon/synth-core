@@ -1,7 +1,7 @@
-;; name.aski — name domains
+;; name.aski — name classification
 ;;
-;; Every name in an aski program belongs to a domain.
-;; The domain classifies the name's syntactic role.
+;; Every name in an aski program belongs to a NameDomain —
+;; the classification of its syntactic role.
 ;; Names are scoped — identity comes from position in
 ;; the scope tree, not from a global registry.
 

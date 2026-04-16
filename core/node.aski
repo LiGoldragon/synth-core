@@ -2,6 +2,9 @@
 ;;
 ;; Every syntactic construct that produces a node in the data-tree.
 ;; Grouped by the synth dialect that defines them.
+;;
+;; "Domain" is the overarching concept — any data definition.
+;; Enum, Struct, and Newtype are the three forms of domain.
 
 (node NodeKind Node NodeValue NameRef Span)
 
@@ -10,11 +13,11 @@
 ;; dialect tree — each rule that produces a parse node = one variant.
 
 (NodeKind
-  ;; root (Root.synth)
-  Root Module Domain TraitDecl TraitImpl Struct Const Ffi Process Newtype
+  ;; root (Root.synth) — three domain forms + other constructs
+  Root Module Enum Struct Newtype TraitDecl TraitImpl Const Ffi Process
 
-  ;; domain children (Domain.synth)
-  Variant DataVariant StructVariant NestedDomain NestedStruct
+  ;; enum children (Enum.synth)
+  Variant DataVariant StructVariant NestedEnum NestedStruct
 
   ;; struct children (Struct.synth)
   TypedField SelfTypedField
@@ -71,8 +74,8 @@
 
 
 ;; ── Name Reference ──────────────────────────────────────────────
-;; A reference to a name. The domain says what kind of name.
-;; The name's identity comes from the scope tree — not a global
+;; A reference to a name. NameDomain says what kind of name.
+;; The name's identity comes from the scope tree.
 ;; Resolution walks up the scope chain.
 
 (NameRef
