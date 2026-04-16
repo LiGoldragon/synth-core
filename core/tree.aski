@@ -1,22 +1,12 @@
-;; tree.aski — the data-tree and synth output
+;; tree.aski — the data-tree
 ;;
-;; SynthOutput is what askicc produces (first pass).
-;; DataTree is what askic produces (second pass).
+;; The data-tree is the output of askic — a populated Node tree
+;; representing a compiled .aski program.
+;;
+;; DialectKind, Rule, and grammar structures belong in askicc
+;; (compiler infrastructure), not in aski-core (language anatomy).
 
-(tree SynthOutput DataTree)
-
-;; ── First Pass Output (askicc) ──────────────────────────────────
-
-{SynthOutput
-  Scope
-  (Dialects DialectTable)}
-
-{DialectTable (Dialects [Vec Dialect])}
-
-{Dialect (Kind DialectKind) (Rules [Vec Rule])}
-
-
-;; ── Second Pass Output (askic) ──────────────────────────────────
+(tree DataTree)
 
 {DataTree
   (Root Node)

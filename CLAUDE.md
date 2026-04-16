@@ -15,7 +15,6 @@ These are the source of truth. Writing a domain in Rust
 instead of defining it in .aski is always wrong.
 
 Domain = any data definition (enum + struct + newtype).
-Never means just "enum."
 
 ## cc — Core Compiler (crate)
 
