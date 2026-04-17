@@ -38,7 +38,7 @@
   Param Signature Method
   TraitDecl TraitImpl TypeImpl
   Match Pattern Loop Process
-  StructConstruct Ffi)
+  IterationSource StructConstruct Ffi)
 
 (LiteralToken
   At MutAt BorrowAt Dollar
