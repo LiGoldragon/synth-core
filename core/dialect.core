@@ -78,7 +78,7 @@
   BlockBody MatchBody LoopBody IterBody StructBody
 
   ;; Type-expression variants
-  InstanceType AppliedType GenericParamType
+  Named InstanceType AppliedType GenericParamType
   BorrowedType MutBorrowedType
 
   ;; Misc leaf constructs
@@ -123,7 +123,7 @@
 
 ;; ── Keywords / cardinality / delimiters ─────────────────────
 
-(KeywordToken Self Main)
+(KeywordToken Self)
 
 (Cardinality One ZeroOrMore OneOrMore Optional)
 
