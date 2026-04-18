@@ -1,15 +1,22 @@
-;; dialect.aski — the rkyv contract between askicc and askic.
+;; dialect.core — the rkyv contract between askicc and askic.
 ;;
 ;; Every type here appears in the rkyv message that askicc
 ;; produces and askic deserializes. No strings — every piece
 ;; of synth data is a typed domain variant.
 ;;
-;; Leaf types first, composite types last (Rust declaration order).
+;; v0.18: four surfaces (core, aski, synth, exec).
+;; Each surface has its own dialect tree with SurfaceKind tag.
 
 (Dialect
   DialectTree Dialect Rule Alternative Item ItemContent
   Label Binding LabelKind Casing KeywordToken
-  Cardinality DelimKind DialectKind LiteralToken)
+  Cardinality DelimKind DialectKind LiteralToken
+  SurfaceKind Tag)
+
+
+;; ── Surface (which file type this grammar describes) ────────
+
+(SurfaceKind Core Aski Synth Exec)
 
 
 ;; ── Leaf Enums (no data, Copy) ──────────────────────────────
@@ -19,13 +26,57 @@
 (Casing Pascal Camel)
 
 (LabelKind
-  Module Enum Struct Type Newtype Constructor Variant Field
-  Literal Instance Binding Param Bound Const
-  Ffi Trait Method ForeignFunction Signature Role
+  ;; Module-level (@-readable or #-tag)
+  Module ModuleName Enum EnumName Struct StructName
+  Type Newtype NewtypeName Const ConstName
+  Ffi FfiName Trait TraitName
+
+  ;; Names read from source (no ambiguity)
+  Constructor Field Literal Instance Binding
+  Param Bound Role Method Signature ForeignFunction
+
+  ;; Module imports/exports
   ObjectExport ActionExport ObjectImport ActionImport
-  BareVariant DataVariant StructVariant
-  NestedEnum NestedStruct
-  TypedField SelfTypedField)
+
+  ;; Enum children
+  BareVariant DataVariant StructVariant NestedEnum NestedStruct
+
+  ;; Struct children
+  TypedField SelfTypedField
+
+  ;; Instance declarations
+  TypedInstance UntypedInstance LocalTypeDecl
+
+  ;; Binary operators (#-tags)
+  BinOr BinAnd
+  BinEq BinNotEq BinLt BinGt BinLtEq BinGtEq
+  BinAdd BinSub BinMul BinMod
+
+  ;; Postfix operators (#-tags)
+  FieldAccess MethodCall TryUnwrap
+
+  ;; Expression variants (#-tags)
+  InstanceRef PathVariant PathCall LiteralExpr
+  InlineEval MatchExpr LoopExpr IterExpr StructExpr
+
+  ;; Statement variants (#-tags)
+  EarlyReturn WhileLoop InfiniteLoop Iteration
+  MutationStmt InstanceStmt ExprStmt
+
+  ;; Pattern variants (#-tags)
+  VariantBind VariantMatch StringMatch
+
+  ;; Loop variants (#-tags)
+  ConditionalLoop
+
+  ;; Method body variants (#-tags)
+  BlockBody MatchBody LoopBody IterBody StructBody
+
+  ;; Type expression variants (#-tags)
+  InstanceType AppliedType GenericParamType
+
+  ;; exec-specific
+  Program)
 
 (KeywordToken Self Main)
 
@@ -39,9 +90,10 @@
   Type TypeApplication GenericParam
   Statement Instance Mutation
   Param Signature Method
-  TraitDecl TraitImpl TypeImpl
-  Match Pattern Loop Process
-  IterationSource StructConstruct Ffi)
+  Match Pattern Loop
+  IterationSource StructConstruct Ffi
+  Program
+  SynthRule SynthAlt SynthItem SynthLabel SynthCard)
 
 (LiteralToken
   At MutAt BorrowAt Dollar
@@ -50,12 +102,18 @@
   LogicalOr LogicalAnd
   Eq NotEq Lt Gt LtEq GtEq
   Minus Percent
-  InlineOr Colon Pipe)
+  InlineOr Colon Pipe
+  DoubleSlash)
 
 
 ;; ── Label (3 bytes: binding + kind + casing) ────────────────
 
 {Label (Binding Binding) (Kind LabelKind) (Casing Casing)}
+
+
+;; ── Tag (# names the output variant without reading source) ─
+
+{Tag (Kind LabelKind)}
 
 
 ;; ── Composite Types ─────────────────────────────────────────
@@ -64,7 +122,8 @@
 
 (ItemContent
   {Named (Label Label)}
-  {DialectRef (Target DialectKind)}
+  {Tagged (Tag Tag)}
+  {DialectRef (Surface [Option SurfaceKind]) (Target DialectKind)}
   {Delimited (Kind DelimKind) (Inner [Vec Item])}
   {Literal (Token LiteralToken)}
   {Keyword (Token KeywordToken)}
@@ -81,4 +140,4 @@
 
 {Dialect (Kind DialectKind) (Rules [Vec Rule])}
 
-{DialectTree (Dialects [Vec Dialect])}
+{DialectTree (Surface SurfaceKind) (Dialects [Vec Dialect])}
