@@ -59,6 +59,7 @@
   ;; Expression variants
   InstanceRef PathVariant PathCall LiteralExpr
   InlineEval MatchExpr LoopExpr IterExpr StructExpr
+  BorrowExpr MutBorrowExpr
 
   ;; Binary operators
   BinOr BinAnd BinEq BinNotEq BinLt BinGt BinLtEq BinGtEq
@@ -78,6 +79,7 @@
 
   ;; Type-expression variants
   InstanceType AppliedType GenericParamType
+  BorrowedType MutBorrowedType
 
   ;; Misc leaf constructs
   TypeAnnotation FieldInit MatchArm FfiFunction BoundedParam CallArgs
