@@ -1,46 +1,53 @@
-# aski-core — rkyv Contract (askicc↔askic)
+# synth-core — Grammar rkyv Contract (askicc↔askic)
 
-aski-core defines every type that appears in the rkyv message
-between askicc and askic. corec generates Rust with rkyv
-derives from the .aski definitions. Both askicc (serializer)
-and askic (deserializer) depend on aski-core as a Cargo crate
+synth-core defines every type in the rkyv message that askicc
+produces and askic deserializes. corec generates Rust with rkyv
+derives from the `.core` definitions. Both askicc (serializer)
+and askic (deserializer) depend on synth-core as a Cargo crate
 via flake-crates/.
 
-## .aski Definitions
+## .core Definitions
 
-- `core/name.aski` — NameDomain, Operator
-- `core/scope.aski` — ScopeKind, Visibility
-- `core/span.aski` — Span
-- `core/dialect.aski` — Dialect, Rule, Alternative, Item,
-  ItemContent, Cardinality, Casing, DelimKind
-
-Still missing: DialectKind, Sigil.
+- `core/dialect.core` — SurfaceKind, Dialect, DialectTree, Rule,
+  Alternative, Item, ItemContent, Label, Tag, Binding,
+  LabelKind, TagKind, Casing, Cardinality, DelimKind,
+  DialectKind, LiteralToken, KeywordToken.
 
 ## How It Works
 
 ```
-core/*.aski → corec → generated/aski_core.rs → lib.rs includes it
+core/dialect.core → corec → generated/synth_core.rs → lib.rs includes it
 ```
 
-src/lib.rs does `include!("../generated/aski_core.rs")`.
-Run `corec core generated/aski_core.rs` to regenerate locally.
+`src/lib.rs` does `include!("../generated/synth_core.rs")`.
+Run `corec core generated/synth_core.rs` to regenerate locally.
 In nix, the flake runs corec automatically.
 
 ## The Pipeline
 
 ```
-corec       — .aski → Rust with rkyv derives (the tool)
-aski-core   — grammar .aski + corec → Rust rkyv types (this repo)
-aski   — parse tree .aski + corec → Rust rkyv types
-askicc      — uses aski-core types → rkyv dialect-data-tree
-askic       — uses aski-core (input) + aski (output)
-semac       — uses aski types only
+corec       — .core → Rust with rkyv derives (the tool)
+synth-core  — grammar .core + corec → Rust rkyv types (this repo)
+aski-core   — parse tree .core + corec → Rust rkyv types
+askicc      — uses synth-core types → dsls.rkyv (dsl tree, all 4 DSLs combined)
+askic       — uses synth-core (input) + aski-core (output)
+veric/semac — use aski-core / sema-core types
 ```
+
+## v0.18 Shape
+
+- `SurfaceKind` — Core, Aski, Synth, Exec (the four DSLs)
+- `Dialect { surface, kind, rules }` — one .synth file, surface-tagged
+- `DialectTree { dialects }` — flat Vec across all four DSLs
+- `Tag { kind: TagKind }` — output node type identifier (`#Tag#`)
+- `Label { binding, kind: LabelKind, casing }` — source-read role
+  (`@`, `:`, `'` produce Declare, Reference, Origin bindings)
+- Cross-surface refs: `ItemContent::DialectRef { surface: Option<SurfaceKind>, target: DialectKind }`
 
 ## Rust Style
 
-**No free functions — methods on types always.** `main` is
-the only exception.
+**No free functions — methods on types always.** `main` is the
+only exception.
 
 ## VCS
 

@@ -90,6 +90,7 @@
   NamedItem TaggedItem DialectRefItem DelimitedItem RepeatItem
   LiteralItem KeywordItem
   DeclarePascal DeclareCamel ReferencePascal ReferenceCamel
+  OriginPascal
   ZeroOrMore OneOrMore Optional)
 
 
