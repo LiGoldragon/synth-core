@@ -2,16 +2,21 @@
 ;;
 ;; Every type here appears in the rkyv message that askicc
 ;; produces and askic deserializes. No strings — every piece
-;; of synth data is a typed domain variant.
+;; of dsl data is a typed variant.
 ;;
-;; v0.18: four surfaces (core, aski, synth, exec).
-;; Each surface has its own dialect tree with SurfaceKind tag.
+;; v0.18:
+;; - Four surfaces (core, aski, synth, exec).
+;; - Single combined rkyv: all surfaces in one DialectTree.
+;; - TagKind + LabelKind are separate orthogonal enums:
+;;     #Tag#  identifies the TYPE of an output node.
+;;     @Label identifies the ROLE of a source-read identifier.
+;;   They never overlap — verified across all .synth files.
 
 (Dialect
   DialectTree Dialect Rule Alternative Item ItemContent
   Label Binding LabelKind Casing KeywordToken
   Cardinality DelimKind DialectKind LiteralToken
-  SurfaceKind Tag)
+  SurfaceKind Tag TagKind)
 
 
 ;; ── Surface (which file type this grammar describes) ────────
@@ -25,18 +30,17 @@
 
 (Casing Pascal Camel)
 
-(LabelKind
-  ;; Module-level (@-readable or #-tag)
-  Module ModuleName Enum EnumName Struct StructName
-  Type Newtype NewtypeName Const ConstName
-  Ffi FfiName Trait TraitName
 
-  ;; Names read from source (no ambiguity)
-  Constructor Field Literal Instance Binding
-  Param Bound Role Method Signature ForeignFunction
+;; ── TagKind — names the TYPE of an output node ──────────────
+;; Used by #Tag# in synth. Never reads source. Every delimited
+;; construct and every bare alternative gets exactly one tag.
 
-  ;; Module imports/exports
-  ObjectExport ActionExport ObjectImport ActionImport
+(TagKind
+  ;; Aski root constructs
+  Module Enum Struct Newtype Const Ffi TraitDecl TraitImpl
+
+  ;; exec root
+  Program
 
   ;; Enum children
   BareVariant DataVariant StructVariant NestedEnum NestedStruct
@@ -44,45 +48,80 @@
   ;; Struct children
   TypedField SelfTypedField
 
-  ;; Instance declarations
-  TypedInstance UntypedInstance LocalTypeDecl
+  ;; Module imports
+  Import
 
-  ;; Binary operators (#-tags)
-  BinOr BinAnd
-  BinEq BinNotEq BinLt BinGt BinLtEq BinGtEq
-  BinAdd BinSub BinMul BinMod
+  ;; Statement variants
+  EarlyReturn WhileLoop InfiniteLoop Iteration
+  MutationStmt InstanceStmt ExprStmt LocalTypeDecl
+  TypedInstance UntypedInstance
 
-  ;; Postfix operators (#-tags)
-  FieldAccess MethodCall TryUnwrap
-
-  ;; Expression variants (#-tags)
+  ;; Expression variants
   InstanceRef PathVariant PathCall LiteralExpr
   InlineEval MatchExpr LoopExpr IterExpr StructExpr
 
-  ;; Statement variants (#-tags)
-  EarlyReturn WhileLoop InfiniteLoop Iteration
-  MutationStmt InstanceStmt ExprStmt
+  ;; Binary operators
+  BinOr BinAnd BinEq BinNotEq BinLt BinGt BinLtEq BinGtEq
+  BinAdd BinSub BinMul BinMod
 
-  ;; Pattern variants (#-tags)
+  ;; Postfix operators
+  FieldAccess MethodCall TryUnwrap
+
+  ;; Pattern variants
   VariantBind VariantMatch StringMatch
 
-  ;; Loop variants (#-tags)
+  ;; Loop variants
   ConditionalLoop
 
-  ;; Method body variants (#-tags)
+  ;; Method-body variants
   BlockBody MatchBody LoopBody IterBody StructBody
 
-  ;; Type expression variants (#-tags)
+  ;; Type-expression variants
   InstanceType AppliedType GenericParamType
 
-  ;; exec-specific
-  Program)
+  ;; Misc leaf constructs
+  TypeAnnotation FieldInit MatchArm FfiFunction BoundedParam CallArgs
+
+  ;; Synth meta-tags (synth surface describes itself)
+  Sequential OrderedChoice
+  NamedItem TaggedItem DialectRefItem DelimitedItem RepeatItem
+  LiteralItem KeywordItem
+  DeclarePascal DeclareCamel ReferencePascal ReferenceCamel
+  ZeroOrMore OneOrMore Optional)
+
+
+;; ── LabelKind — names the ROLE of a source-read identifier ──
+;; Used by @Label (Binding::Declare) and :Label (Binding::Reference).
+;; Reads a source token and binds it to a field of the enclosing node.
+
+(LabelKind
+  ;; Name declarations — root-level data defs
+  ModuleName EnumName StructName NewtypeName ConstName FfiName
+  TraitName VariantName FieldName MethodName SigName InstanceName
+
+  ;; Short-form declarations (no "Name" suffix)
+  Type Param Binding Role Item
+  ObjectExport ActionExport ForeignFunction
+
+  ;; Reference labels (from :Label)
+  Instance Variant Literal Bound Module Method Statement Field
+  Struct Constructor
+  ObjectImport ActionImport
+
+  ;; Synth-meta labels (synth surface describes itself)
+  LabelName TagName DialectName)
+
+
+;; ── Keywords / cardinality / delimiters ─────────────────────
 
 (KeywordToken Self Main)
 
 (Cardinality One ZeroOrMore OneOrMore Optional)
 
 (DelimKind Paren Bracket Brace ParenPipe BracketPipe BracePipe)
+
+
+;; ── DialectKind — the sub-dsls that compose a surface ───────
 
 (DialectKind
   Root Module Enum Struct Body
@@ -95,6 +134,9 @@
   Program
   SynthRule SynthAlt SynthItem SynthLabel SynthCard)
 
+
+;; ── LiteralToken — source-level terminal symbols ────────────
+
 (LiteralToken
   At MutAt BorrowAt Dollar
   Star Plus Question Ampersand
@@ -103,7 +145,7 @@
   Eq NotEq Lt Gt LtEq GtEq
   Minus Percent
   InlineOr Colon Pipe
-  DoubleSlash)
+  DoubleSlash Hash Apostrophe)
 
 
 ;; ── Label (3 bytes: binding + kind + casing) ────────────────
@@ -113,7 +155,7 @@
 
 ;; ── Tag (# names the output variant without reading source) ─
 
-{Tag (Kind LabelKind)}
+{Tag (Kind TagKind)}
 
 
 ;; ── Composite Types ─────────────────────────────────────────
@@ -128,7 +170,7 @@
   {Literal (Token LiteralToken)}
   {Keyword (Token KeywordToken)}
   {Repeat (Kind Cardinality) (Inner [Box Item])}
-  LiteralValue)
+  StringLit)
 
 {Alternative
   (Items [Vec Item])
@@ -138,6 +180,6 @@
   {Sequential (Items [Vec Item])}
   {OrderedChoice (Alternatives [Vec Alternative])})
 
-{Dialect (Kind DialectKind) (Rules [Vec Rule])}
+{Dialect (Surface SurfaceKind) (Kind DialectKind) (Rules [Vec Rule])}
 
-{DialectTree (Surface SurfaceKind) (Dialects [Vec Dialect])}
+{DialectTree (Dialects [Vec Dialect])}
