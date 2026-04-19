@@ -71,6 +71,12 @@
   ;; Pattern variants
   VariantBind VariantMatch VariantAlt StringMatch
 
+  ;; Param variants (v0.20 — previously untagged OrderedChoice;
+  ;; tags added so askic-assemble can pick the Param enum variant
+  ;; per alternative instead of inferring by token shape.)
+  OwnedSelf BorrowedSelf MutBorrowedSelf
+  OwnedNamed BorrowedNamed MutBorrowedNamed BareNamed
+
   ;; Method-body variants
   BlockBody MatchBody LoopBody IterBody StructBody
 
