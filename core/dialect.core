@@ -69,7 +69,7 @@
   FieldAccess MethodCall TryUnwrap
 
   ;; Pattern variants
-  VariantBind VariantMatch VariantAlt StringMatch
+  VariantBind VariantMatch VariantAlt StringMatch WildcardPattern
 
   ;; Param variants (v0.20 — previously untagged OrderedChoice;
   ;; tags added so askic-assemble can pick the Param enum variant
@@ -168,7 +168,8 @@
   Eq NotEq Lt Gt LtEq GtEq
   Minus Percent
   InlineOr Colon Pipe
-  DoubleSlash Hash Apostrophe)
+  DoubleSlash Hash Apostrophe
+  Underscore)
 
 
 ;; ── Label (3 bytes: binding + kind + casing) ────────────────
