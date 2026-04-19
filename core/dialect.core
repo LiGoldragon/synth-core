@@ -134,7 +134,7 @@
   Expr ExprOr ExprAnd ExprCompare ExprAdd ExprMul ExprPostfix ExprAtom
   Type TypeApplication GenericParam
   Statement Mutation
-  Param Signature Method
+  Param Signature Method MethodBody
   Match Pattern Loop
   IterationSource StructConstruct Ffi
   Origin FieldPath ViewType
